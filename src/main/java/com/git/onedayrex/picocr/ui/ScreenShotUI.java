@@ -9,6 +9,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 
 /**
@@ -20,18 +21,19 @@ public class ScreenShotUI extends JFrame{
     private Dimension d;//Dimension 类封装单个对象中组件的宽度和高度（精确到整数）
     private JLabel imageLabel;//覆盖窗体的图片标签
     private Point point_holder,point_release;//按下鼠标时的坐标与释放鼠标后的坐标，依此计算截屏区域
+    private BufferedImage screenshot = null;
 
     public ScreenShotUI() {
         d = Toolkit.getDefaultToolkit().getScreenSize();//获取整个屏幕大小
 
         setUndecorated(true);//禁用窗体装饰，不显示标题栏，关闭，最小化等
         setSize(d);//设置窗体全屏
-        BufferedImage screenshot = snapShot(0,0,(int)d.getWidth(),(int)d.getHeight());//缓冲图片数据
+        screenshot = snapShot(0,0,(int)d.getWidth(),(int)d.getHeight());//缓冲图片数据
         imageLabel = new JLabel(new ImageIcon(screenshot));//根据图片缓冲构造图片，设为标签，使窗体即为全屏幕像素
 
         add(imageLabel);//添加标签
         addMouseListener(new ShotListenerMouse());//鼠标点击监听
-        //addMouseMotionListener(new ShotListenerMotion());//鼠标拖动监听，绘制选区。。。未完成
+        addMouseMotionListener(new ShotListenerMotion());//鼠标拖动监听，绘制选区。。。未完成
         setVisible(true);//设置窗体为可见。默认不可见
     }
 
@@ -97,6 +99,38 @@ public class ScreenShotUI extends JFrame{
             point_release = e.getPoint();
             snapShot(point_holder, point_release);
             System.exit(0);
+
+        }
+    }
+
+    private class ShotListenerMotion implements MouseMotionListener{
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            //鼠标拖动时，记录坐标并重绘窗口
+            int endx = e.getX();
+            int endy = e.getY();
+
+            //临时图像，用于缓冲屏幕区域放置屏幕闪烁
+            Image tempImage2=createImage(ScreenShotUI.this.getWidth(),ScreenShotUI.this.getHeight());
+            Graphics g =tempImage2.getGraphics();
+            g.drawImage(tempImage2, 0, 0, null);
+            int x = Math.min(point_holder.x, endx);
+            int y = Math.min(point_holder.y, endy);
+            int width = Math.abs(endx - point_holder.x)+1;
+            int height = Math.abs(endy - point_holder.y)+1;
+            // 加上1防止width或height0
+            g.setColor(Color.BLUE);
+            g.drawRect(x-1, y-1, width+1, height+1);
+            //减1加1都了防止图片矩形框覆盖掉
+            BufferedImage saveImage = screenshot.getSubimage(x, y, width, height);
+            g.drawImage(saveImage, x, y, null);
+
+            ScreenShotUI.this.getGraphics().drawImage(tempImage2,0,0,ScreenShotUI.this);
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
 
         }
     }
