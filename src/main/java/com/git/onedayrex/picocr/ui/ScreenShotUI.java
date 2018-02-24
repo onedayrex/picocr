@@ -48,6 +48,7 @@ public class ScreenShotUI extends JFrame{
         String ocrrequest = BaiduUtils.ocrrequest(screen);
         //把内容复制到剪切板
         setSysClipboardText(ocrrequest);
+        this.dispose();
 
     }
 
@@ -98,7 +99,6 @@ public class ScreenShotUI extends JFrame{
 
             point_release = e.getPoint();
             snapShot(point_holder, point_release);
-            System.exit(0);
 
         }
     }
