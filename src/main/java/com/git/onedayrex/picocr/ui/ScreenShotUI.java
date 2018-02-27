@@ -23,7 +23,7 @@ public class ScreenShotUI extends JFrame{
     private Point point_holder,point_release;//按下鼠标时的坐标与释放鼠标后的坐标，依此计算截屏区域
     private BufferedImage screenshot = null;
 
-    public ScreenShotUI() {
+    public ScreenShotUI(TrayIcon trayIcon) {
         d = Toolkit.getDefaultToolkit().getScreenSize();//获取整个屏幕大小
 
         setUndecorated(true);//禁用窗体装饰，不显示标题栏，关闭，最小化等
@@ -32,23 +32,27 @@ public class ScreenShotUI extends JFrame{
         imageLabel = new JLabel(new ImageIcon(screenshot));//根据图片缓冲构造图片，设为标签，使窗体即为全屏幕像素
 
         add(imageLabel);//添加标签
-        addMouseListener(new ShotListenerMouse());//鼠标点击监听
-        addMouseMotionListener(new ShotListenerMotion());//鼠标拖动监听，绘制选区。。。未完成
+        addMouseListener(new ShotListenerMouse(trayIcon));//鼠标点击监听
+        addMouseMotionListener(new ShotListenerMotion());//鼠标拖动监听，绘制选区
         setVisible(true);//设置窗体为可见。默认不可见
     }
 
     /**
      * 根据参数计算区域
+     *
      * @param point_holder
      * @param point_release
      */
-    private void snapShot(Point point_holder, Point point_release) {
+    private void snapShot(Point point_holder, Point point_release, TrayIcon trayIcon) {
         //获取屏幕数据的缓冲流
         BufferedImage screen = snapShot(point_holder.x, point_holder.y, point_release.x - point_holder.x, point_release.y - point_holder.y);
+        this.dispose();
+        //ocr识别
+        trayIcon.setImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("process.gif")));
         String ocrrequest = BaiduUtils.ocrrequest(screen);
+        trayIcon.setImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("screenshot24.png")));
         //把内容复制到剪切板
         setSysClipboardText(ocrrequest);
-        this.dispose();
 
     }
 
@@ -73,6 +77,11 @@ public class ScreenShotUI extends JFrame{
     }
 
     private class ShotListenerMouse implements MouseListener {
+        private TrayIcon trayIcon = null;
+
+        public ShotListenerMouse(TrayIcon trayIcon) {
+            this.trayIcon = trayIcon;
+        }
 
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -98,7 +107,7 @@ public class ScreenShotUI extends JFrame{
         public void mouseReleased(MouseEvent e) {
 
             point_release = e.getPoint();
-            snapShot(point_holder, point_release);
+            snapShot(point_holder, point_release,trayIcon);
 
         }
     }
