@@ -2,3 +2,6 @@ target/
 .idea/
 *iml
 logs/
+.gradle/
+build/
+gradle/
