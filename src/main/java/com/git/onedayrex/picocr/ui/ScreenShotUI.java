@@ -12,6 +12,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,34 +26,34 @@ public class ScreenShotUI extends JFrame{
     private Dimension d;//Dimension 类封装单个对象中组件的宽度和高度（精确到整数）
     private JLabel imageLabel;//覆盖窗体的图片标签
     private Point point_holder,point_release;//按下鼠标时的坐标与释放鼠标后的坐标，依此计算截屏区域
-    private BufferedImage screenshot = null;
+    private BufferedImage srcScreenShot = null;
 
     public ScreenShotUI(TrayIcon trayIcon) {
         d = Toolkit.getDefaultToolkit().getScreenSize();//获取整个屏幕大小
 
         setUndecorated(true);//禁用窗体装饰，不显示标题栏，关闭，最小化等
         setSize(d);//设置窗体全屏
-        screenshot = this.snapShadowShot(0,0,(int)d.getWidth(),(int)d.getHeight());//缓冲图片数据
-        imageLabel = new JLabel(new ImageIcon(screenshot));//根据图片缓冲构造图片，设为标签，使窗体即为全屏幕像素
-
+        BufferedImage temp = this.snapShot(0,0,(int)d.getWidth(),(int)d.getHeight());//缓冲图片数据
+        srcScreenShot = new BufferedImage(temp.getWidth(), temp.getHeight(), temp.getType());
+        srcScreenShot.setData(temp.getData());
+        this.snapShadowShot(temp);
+        imageLabel = new JLabel(new ImageIcon(temp));//根据图片缓冲构造图片，设为标签，使窗体即为全屏幕像素
         add(imageLabel);//添加标签
         addMouseListener(new ShotListenerMouse(trayIcon));//鼠标点击监听
         addMouseMotionListener(new ShotListenerMotion());//鼠标拖动监听，绘制选区
         setVisible(true);//设置窗体为可见。默认不可见
     }
 
-    private BufferedImage snapShadowShot(int i, int j, int width, int height) {
-        BufferedImage write = this.snapShot(i, j, width, height);
-        BufferedImage read = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+    private void snapShadowShot(BufferedImage write) {
+        BufferedImage read = new BufferedImage(ScreenShotUI.this.getWidth(), ScreenShotUI.this.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
         Graphics2D readGraphics = read.createGraphics();
         readGraphics.setColor(Color.black);
-        readGraphics.fillRect(0, 0, width, height);
+        readGraphics.fillRect(0, 0, ScreenShotUI.this.getWidth(), ScreenShotUI.this.getHeight());
         readGraphics.dispose();
         Graphics2D graphics = write.createGraphics();
         graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 0.5f));
         graphics.drawImage(read, 0, 0, null);
         graphics.dispose();
-        return write;
     }
 
     /**
@@ -71,7 +72,6 @@ public class ScreenShotUI extends JFrame{
         trayIcon.setImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("screenshot24.png")));
         //把内容复制到剪切板
         setSysClipboardText(ocrrequest);
-
     }
 
     /**
@@ -139,21 +139,29 @@ public class ScreenShotUI extends JFrame{
             int endy = e.getY();
 
             //临时图像，用于缓冲屏幕区域放置屏幕闪烁
-            Image tempImage2=createImage(ScreenShotUI.this.getWidth(),ScreenShotUI.this.getHeight());
-            Graphics g =tempImage2.getGraphics();
-            g.drawImage(tempImage2, 0, 0, null);
+            BufferedImage tempImage2 = new BufferedImage(ScreenShotUI.this.getWidth(), ScreenShotUI.this.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+            Graphics2D g = tempImage2.createGraphics();
             int x = Math.min(point_holder.x, endx);
             int y = Math.min(point_holder.y, endy);
-            int width = Math.abs(endx - point_holder.x)+1;
-            int height = Math.abs(endy - point_holder.y)+1;
+            //取到大的坐标
+            int mx = Math.max(point_holder.x, endx);
+            int my = Math.max(point_holder.y, endy);
             // 加上1防止width或height0
-            g.setColor(Color.BLUE);
-            g.drawRect(x-1, y-1, width+1, height+1);
-            //减1加1都了防止图片矩形框覆盖掉
-            BufferedImage saveImage = screenshot.getSubimage(x, y, width, height);
-            g.drawImage(saveImage, x, y, null);
+            g.setColor(Color.BLACK);
+            //把非选取都画成黑色
+            g.fillRect(0, 0, ScreenShotUI.this.getWidth(), y + 1);
+            g.fillRect(0, 0, x + 1, ScreenShotUI.this.getHeight());
+            g.fillRect(x+1, my, ScreenShotUI.this.getWidth(), ScreenShotUI.this.getHeight());
+            g.fillRect(mx, y+1, ScreenShotUI.this.getWidth(), ScreenShotUI.this.getHeight());
+            g.dispose();
+            BufferedImage bufferedImage = new BufferedImage(srcScreenShot.getWidth(), srcScreenShot.getHeight(), srcScreenShot.getType());
+            bufferedImage.setData(srcScreenShot.getData());
+            Graphics2D srcScreenShotGraphics = bufferedImage.createGraphics();
+            srcScreenShotGraphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 0.5f));
+            srcScreenShotGraphics.drawImage(tempImage2, 0, 0, null);
+            srcScreenShotGraphics.dispose();
 
-            ScreenShotUI.this.getGraphics().drawImage(tempImage2,0,0,ScreenShotUI.this);
+            ScreenShotUI.this.getGraphics().drawImage(bufferedImage,0,0,ScreenShotUI.this);
         }
 
         @Override
