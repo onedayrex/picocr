@@ -1,8 +1,5 @@
 package com.git.onedayrex.picocr.ui;
 
-import com.melloware.jintellitype.HotkeyListener;
-import com.melloware.jintellitype.JIntellitype;
-import com.melloware.jintellitype.JIntellitypeConstants;
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
@@ -31,13 +28,6 @@ public class MainUI extends JFrame{
         } catch (AWTException e) {
             e.printStackTrace();
         }
-        JIntellitype.getInstance().registerHotKey(SCREEN_KEY, JIntellitypeConstants.MOD_ALT,(int)'A');
-        JIntellitype.getInstance().addHotKeyListener(new HotkeyListener() {
-            @Override
-            public void onHotKey(int i) {
-                ScreenShotUI screenShotUI = new ScreenShotUI(trayIcon);
-            }
-        });
         this.setVisible(false);
     }
 

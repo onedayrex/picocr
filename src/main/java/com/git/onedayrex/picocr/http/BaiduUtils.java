@@ -3,18 +3,14 @@ package com.git.onedayrex.picocr.http;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import okhttp3.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Created by fuxiang.zhong on 2018/2/24.
@@ -78,7 +74,7 @@ public class BaiduUtils {
     }
 
     public static String image2Base64(BufferedImage bf) {
-        ByteOutputStream out = new ByteOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] data = null;
         //读取图片字节数组
         try
