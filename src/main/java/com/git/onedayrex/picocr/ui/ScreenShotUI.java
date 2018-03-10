@@ -2,6 +2,7 @@ package com.git.onedayrex.picocr.ui;
 
 import com.git.onedayrex.picocr.http.BaiduUtils;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -11,6 +12,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * Created by fuxiang.zhong on 2018/2/24.
@@ -28,13 +32,27 @@ public class ScreenShotUI extends JFrame{
 
         setUndecorated(true);//禁用窗体装饰，不显示标题栏，关闭，最小化等
         setSize(d);//设置窗体全屏
-        screenshot = snapShot(0,0,(int)d.getWidth(),(int)d.getHeight());//缓冲图片数据
+        screenshot = this.snapShadowShot(0,0,(int)d.getWidth(),(int)d.getHeight());//缓冲图片数据
         imageLabel = new JLabel(new ImageIcon(screenshot));//根据图片缓冲构造图片，设为标签，使窗体即为全屏幕像素
 
         add(imageLabel);//添加标签
         addMouseListener(new ShotListenerMouse(trayIcon));//鼠标点击监听
         addMouseMotionListener(new ShotListenerMotion());//鼠标拖动监听，绘制选区
         setVisible(true);//设置窗体为可见。默认不可见
+    }
+
+    private BufferedImage snapShadowShot(int i, int j, int width, int height) {
+        BufferedImage write = this.snapShot(i, j, width, height);
+        BufferedImage read = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+        Graphics2D readGraphics = read.createGraphics();
+        readGraphics.setColor(Color.black);
+        readGraphics.fillRect(0, 0, width, height);
+        readGraphics.dispose();
+        Graphics2D graphics = write.createGraphics();
+        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 0.5f));
+        graphics.drawImage(read, 0, 0, null);
+        graphics.dispose();
+        return write;
     }
 
     /**
