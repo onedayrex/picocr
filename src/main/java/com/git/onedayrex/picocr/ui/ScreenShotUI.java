@@ -1,6 +1,8 @@
 package com.git.onedayrex.picocr.ui;
 
 import com.git.onedayrex.picocr.http.BaiduUtils;
+import com.git.onedayrex.picocr.http.ConfigUtils;
+import com.git.onedayrex.picocr.http.TencentUtils;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -68,7 +70,14 @@ public class ScreenShotUI extends JFrame{
         this.dispose();
         //ocr识别
         trayIcon.setImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("process.gif")));
-        String ocrrequest = BaiduUtils.ocrrequest(screen);
+        String ocrType = ConfigUtils.getProperties("ocr.type");
+        String ocrrequest = null;
+        if ("1".equals(ocrType)) {
+            //tencent
+            ocrrequest = TencentUtils.ocrString(screen);
+        }else {
+            ocrrequest = BaiduUtils.ocrrequest(screen);
+        }
         trayIcon.setImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("screenshot24.png")));
         //把内容复制到剪切板
         setSysClipboardText(ocrrequest);

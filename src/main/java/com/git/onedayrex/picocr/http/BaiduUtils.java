@@ -46,7 +46,7 @@ public class BaiduUtils {
         OkHttpClient okHttpClient = new OkHttpClient();
         FormBody body = new FormBody.Builder()
                 .add("access_token", getAuthToken())
-                .add("image",image2Base64(bf))
+                .add("image",ImageUtils.image2Base64(bf))
                 .build();
         Request req = new Request.Builder()
                 .url(OCR_URL)
@@ -73,20 +73,4 @@ public class BaiduUtils {
         return "";
     }
 
-    public static String image2Base64(BufferedImage bf) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] data = null;
-        //读取图片字节数组
-        try
-        {
-            ImageIO.write(bf, "png", out);
-            data = out.toByteArray();
-            out.close();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        return new String(Base64.encodeBase64(data));
-    }
 }
